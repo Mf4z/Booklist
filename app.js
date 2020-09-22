@@ -8,6 +8,53 @@ function Book(title, author, isbn) {
 //UI constructor
 function UI() {}
 
+//Storage constructor
+function Storage() {}
+
+//Get book from Local Storage
+Storage.prototype.getBooks = function () {
+  let books;
+  if (localStorage.getItem('books') == null) {
+    books = [];
+  } else {
+    books = JSON.parse(localStorage.getItem('books'));
+  }
+
+  return books;
+};
+
+//Add book to Local Storage
+Storage.prototype.addBook = function (book) {
+  const store = new Storage();
+
+  const books = store.getBooks();
+  books.push(book);
+  localStorage.setItem('books', JSON.stringify(books));
+};
+
+//Display LS books to UI
+Storage.prototype.displayBooks = function () {
+  const store = new Storage();
+  const books = store.getBooks();
+  books.forEach((book) => {
+    const ui = new UI();
+    ui.addBookToList(book);
+  });
+};
+
+//Delete book from LS
+Storage.prototype.deleteBook = function (isbn) {
+  const store = new Storage();
+  const books = store.getBooks();
+  books.forEach(function (book, index) {
+    if (book.isbn === isbn) {
+      books.splice(index, 1);
+    }
+  });
+
+  localStorage.setItem('books', JSON.stringify(books));
+};
+
 //Add book to list
 UI.prototype.addBookToList = function (book) {
   const list = document.getElementById('book-list');
@@ -79,6 +126,8 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
   //Instantiate UI
   const ui = new UI();
 
+  const store = new Storage();
+
   //Validate
   if (title === '' || author === '' || isbn === '') {
     //Error alert
@@ -86,6 +135,9 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
   } else {
     //Add book list
     ui.addBookToList(book);
+
+    //Add book to Ls
+    store.addBook(book);
 
     //Show success
     ui.showAlert('Book Added', 'success');
@@ -101,10 +153,20 @@ document.getElementById('book-form').addEventListener('submit', function (e) {
 //Event listener for delete
 document.getElementById('book-list').addEventListener('click', function (e) {
   const ui = new UI();
+  const store = new Storage();
 
   ui.deleteBook(e.target);
+
+  //Remove book from LS
+  store.deleteBook(e.target.parentElement.previousElementSibling.textContent);
 
   //Show alert
   ui.showAlert('Book removed', 'success');
   e.preventDefault();
 });
+
+//Event Listener for add book to LS
+const store = new Storage();
+document.addEventListener('DOMContentLoaded', store.displayBooks);
+
+//Delete from LS
